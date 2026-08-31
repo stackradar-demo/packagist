@@ -24,10 +24,12 @@ jobs:
       DATABASE_URL: mysql://root:root@127.0.0.1:3306/packagist?serverVersion=8.0
     steps:
       - name: Check out the exact revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: '8.4'
           extensions: intl, zip, apcu
@@ -35,10 +37,13 @@ jobs:
           tools: composer:v2
           ini-values: apc.enable_cli=1
 
-      - name: Start project services
-        run: |
-          sudo systemctl start mysql.service
-          sudo systemctl start redis-server.service
+      - name: Start MySQL
+        run: sudo systemctl start mysql.service
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@bc274cb7238cd63a45029db04ee48c07a72609fd # 1.8.1
+        with:
+          redis-version: 6
 
       - name: Validate Composer metadata
         run: composer validate --no-check-publish --no-interaction

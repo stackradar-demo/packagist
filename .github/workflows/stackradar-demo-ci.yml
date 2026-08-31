@@ -59,5 +59,10 @@ jobs:
       - name: Run tests
         run: composer test
 
+      - name: Recreate the analysis database
+        run: |
+          bin/console doctrine:database:create -n --if-not-exists
+          bin/console doctrine:schema:create -n
+
       - name: Run PHPStan
         run: composer phpstan

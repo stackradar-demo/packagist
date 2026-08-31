@@ -20,6 +20,8 @@ verification:
     - [docker, run, --detach, --name, stackradar-redis, --publish, '6379:6379', 'redis:6']
     - [php, bin/console, doctrine:database:create, -n]
     - [php, bin/console, doctrine:schema:create, -n]
+    - [env, APP_ENV=dev, php, bin/console, doctrine:database:create, -n, --if-not-exists]
+    - [env, APP_ENV=dev, php, bin/console, doctrine:schema:create, -n]
   commands:
     - [composer, test]
-    - [composer, phpstan]
+    - [env, APP_ENV=dev, composer, phpstan]

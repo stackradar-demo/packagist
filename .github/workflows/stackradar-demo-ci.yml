@@ -1,0 +1,58 @@
+name: StackRadar Demo CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stackradar-demo-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: StackRadar Demo CI
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      APP_ENV: test
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/packagist?serverVersion=8.0
+    steps:
+      - name: Check out the exact revision
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, zip, apcu
+          coverage: none
+          tools: composer:v2
+          ini-values: apc.enable_cli=1
+
+      - name: Start project services
+        run: |
+          sudo systemctl start mysql.service
+          sudo systemctl start redis-server.service
+
+      - name: Validate Composer metadata
+        run: composer validate --no-check-publish --no-interaction
+
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare the test database
+        run: |
+          bin/console doctrine:database:create -n
+          bin/console doctrine:schema:create -n
+
+      - name: Run tests
+        run: composer test
+
+      - name: Run PHPStan
+        run: composer phpstan

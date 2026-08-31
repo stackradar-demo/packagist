@@ -1,0 +1,25 @@
+version: 1
+
+automerge:
+  minimum_score: 80
+  soak_seconds: 0
+
+changes:
+  test_edits: score
+
+ci:
+  workflow: stackradar-demo-ci.yml
+  required_check: StackRadar Demo CI
+
+verification:
+  environment:
+    APP_ENV: test
+    DATABASE_URL: mysql://root:root@127.0.0.1:3306/packagist?serverVersion=8.0
+  setup:
+    - [sudo, systemctl, start, mysql.service]
+    - [sudo, systemctl, start, redis-server.service]
+    - [php, bin/console, doctrine:database:create, -n]
+    - [php, bin/console, doctrine:schema:create, -n]
+  commands:
+    - [composer, test]
+    - [composer, phpstan]
